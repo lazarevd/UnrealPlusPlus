@@ -51,19 +51,24 @@ void ABasicShapes::GenerateMesh()
     Colors.SetNum((resolution - 1) * (resolution - 1) * 2 * planeCount);
     UVs.SetNum((resolution - 1) * (resolution - 1) * 6 * planeCount);
 
-    AddSquareMesh(FVector(0.0f, 1.0f, 0.0f), resolution, scale, 0,  TangentSetup);
-    AddSquareMesh(FVector(0.0f, -1.0f, 0.0f), resolution, scale, 1, TangentSetup);
-    AddSquareMesh(FVector(1.0f, 0.0f, 0.0f), resolution, scale, 2, TangentSetup);
-    AddSquareMesh(FVector(-1.0f, 0.0f, 0.0f), resolution, scale, 3,  TangentSetup);
-    AddSquareMesh(FVector(0.0f, 0.0f, 1.0f), resolution, scale, 4, TangentSetup);
-    AddSquareMesh(FVector(0.0f, 0.0f, -1.0f), resolution, scale, 5, TangentSetup);
+    AddSquareMesh(FVector(0.0f, 1.0f, 0.0f), resolution, 0,  TangentSetup);
+    AddSquareMesh(FVector(0.0f, -1.0f, 0.0f), resolution, 1, TangentSetup);
+    AddSquareMesh(FVector(1.0f, 0.0f, 0.0f), resolution, 2, TangentSetup);
+    AddSquareMesh(FVector(-1.0f, 0.0f, 0.0f), resolution, 3,  TangentSetup);
+    AddSquareMesh(FVector(0.0f, 0.0f, 1.0f), resolution, 4, TangentSetup);
+    AddSquareMesh(FVector(0.0f, 0.0f, -1.0f), resolution, 5, TangentSetup);
+
+    for (int i = 0; i < Vertices.Num(); i++) {
+        Vertices[i] = Vertices[i].GetSafeNormal() * scale;
+        //Vertices[i] = PointOnCurveToPointOnSphere(Vertices[i])*scale;
+    }
 
     ThisMesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UVs, Colors, Tangents, true);
 
 }
 
 
-void ABasicShapes::AddSquareMesh(FVector normal, int32 resolution, int32 scale, int32 planeNumber, FProcMeshTangent Tangent)
+void ABasicShapes::AddSquareMesh(FVector normal, int32 resolution, int32 planeNumber, FProcMeshTangent Tangent)
 {
     FVector axisA = FVector(normal.Y, normal.Z, normal.X);//WTF Sebastian Lague says to do so (Procedural planets (E01))
     FVector axisB = FVector::CrossProduct(normal, axisA).GetSafeNormal()*-1;
@@ -80,7 +85,7 @@ void ABasicShapes::AddSquareMesh(FVector normal, int32 resolution, int32 scale, 
         for (int y = 0; y < resolution; y++) {
             int32 vertexIndex = (x + y * resolution) + resolution * resolution * planeNumber;
             FVector2D gridPos = FVector2D(x, y) / (resolution - 1.0f);
-            FVector point = normal*scale + axisA * (2 * gridPos.X - 1)*scale + axisB * (2 * gridPos.Y - 1)*scale;
+            FVector point = normal + axisA * (2 * gridPos.X - 1) + axisB * (2 * gridPos.Y - 1);
             Vertices[vertexIndex] = point;
             UVs[vertexIndex] = FVector2D(0.f, 0.f);
         
@@ -104,6 +109,18 @@ void ABasicShapes::AddSquareMesh(FVector normal, int32 resolution, int32 scale, 
         }
         }
     }
+}
+
+FVector ABasicShapes::PointOnCurveToPointOnSphere(FVector p)
+{   
+    float x2 = p.X * p.X;
+    float y2 = p.Y * p.Y;
+    float z2 = p.Z * p.Z;
+
+    float x = p.X * FMath::Sqrt(1 - (y2 + z2) / 2 + (y2 * z2) / 3);
+    float y = p.Y * FMath::Sqrt(1 - (x2 + z2) / 2 + (x2 * z2) / 3);
+    float z = p.Z * FMath::Sqrt(1 - (x2 + y2) / 2 + (x2 * y2) / 3);
+    return FVector(x, y, z);
 }
 
 

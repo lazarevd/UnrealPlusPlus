@@ -35,5 +35,8 @@ private:
 	TArray<FLinearColor>Colors;
 
 
-	void AddSquareMesh(FVector normal, int32 resolution, int32 scale, int32 planeNumber, FProcMeshTangent Tangent);
+	void AddSquareMesh(FVector normal, int32 resolution, int32 planeNumber, FProcMeshTangent Tangent);
+
+	FVector PointOnCurveToPointOnSphere(FVector p);
+
 };
